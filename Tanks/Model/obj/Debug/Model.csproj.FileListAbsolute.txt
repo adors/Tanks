@@ -1,0 +1,5 @@
+C:\Users\Alexey\Desktop\Tanks\Model\bin\Debug\Model.dll
+C:\Users\Alexey\Desktop\Tanks\Model\bin\Debug\Model.pdb
+C:\Users\Alexey\Desktop\Tanks\Model\obj\Debug\Model.csprojResolveAssemblyReference.cache
+C:\Users\Alexey\Desktop\Tanks\Model\obj\Debug\Model.dll
+C:\Users\Alexey\Desktop\Tanks\Model\obj\Debug\Model.pdb

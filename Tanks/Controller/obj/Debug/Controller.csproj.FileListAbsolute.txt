@@ -1,0 +1,7 @@
+C:\Users\Alexey\Desktop\Tanks\Controller\bin\Debug\Controller.dll
+C:\Users\Alexey\Desktop\Tanks\Controller\bin\Debug\Controller.pdb
+C:\Users\Alexey\Desktop\Tanks\Controller\bin\Debug\Model.dll
+C:\Users\Alexey\Desktop\Tanks\Controller\bin\Debug\Model.pdb
+C:\Users\Alexey\Desktop\Tanks\Controller\obj\Debug\Controller.csprojResolveAssemblyReference.cache
+C:\Users\Alexey\Desktop\Tanks\Controller\obj\Debug\Controller.dll
+C:\Users\Alexey\Desktop\Tanks\Controller\obj\Debug\Controller.pdb

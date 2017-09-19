@@ -1,543 +1,355 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Text;
-using System.Threading;
-using System.ComponentModel;
-using Tanks.Model;
-using System.Windows.Forms;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Tanks
+namespace Model
 {
-    class Game
+    public class Game
     {
-        Random rand = new Random();
-        List<Tank> tanks = new List<Tank>();
-        List<Wall> walls = new List<Wall>();
+        public delegate void Over();
+        public event Over onScore;
+        public event Over onOver;
+        List<Monolith> monoliths = new List<Monolith>();
         List<Apple> apples = new List<Apple>();
-        List<Rocket> rockets = new List<Rocket>();
+        List<Tree> trees = new List<Tree>();
+        List<Water> waters = new List<Water>();
+        List<Tank> tanks = new List<Tank>();
+        List<Bullet> bullets = new List<Bullet>();
+        int score;
+
+        List<StaticObject> Objects = new List<StaticObject>();
         Kolobok kolobok;
-        KolobokController controller = new KolobokController();
-        private System.Windows.Forms.Timer timer;
-
-        private int countTank;
-        private int countApple;
-        int MAXX;
-        int MAXY;
-        int length;
-
-        private static int score = 0;
-
-        public List<Apple> Apples
-        {
-            get { return apples; }
-        }
-
-        public List<Wall> Walls
-        {
-            get { return walls; }
-        }
-
-        public Kolobok Kolobok
-        {
-            get { return kolobok; }
-        }
-
-        public List<Tank> Tanks
-        {
-            get { return tanks; }
-        }
-
-        public List<Rocket> Rockets
-        {
-            get { return rockets; }
-        }
-
-        public int CountTank
-        {
-            get { return countTank; }
-        }
-        public int CountApple
-        {
-            get { return countApple; }
-        }
-
-        private event KeyEventHandler keyPress;
-        public virtual void OnKeyPress(Keys key)
-        {
-            if (keyPress != null)
-                keyPress(this, new KeyEventArgs(key));
-        }
-
-        public event EventHandler RocketCreatedE;
-        protected virtual void OnRocketCreatedE()
-        {
-            if (RocketCreatedE != null)
-                RocketCreatedE(this, new EventArgs());
-        }
-
-        public event EventHandler GameEndE;
-        protected virtual void OnGameEndE()
-        {
-            if (GameEndE != null)
-                GameEndE(this, new EventArgs());
-        }
-
-        public event EventHandler GameOverE;
-        protected virtual void OnGameOverE()
-        {
-            if (GameOverE != null)
-                GameOverE(this, new EventArgs());
-        }
-
-        public event EventHandler ScoreChangedE;
-        protected virtual void OnScoreChangedE()
-        {
-            if (ScoreChangedE != null)
-                ScoreChangedE(this, new EventArgs());
-        }
-
-        public void SubscribeKeyPress()
-        {
-            this.keyPress += new KeyEventHandler(controller.OnKeyPress);
-            controller.OnKeyPress(this, new KeyEventArgs(Keys.Right));
-        }
-
-        public int Score
-        {
-            get { return score; }
-            set
+        private Random rn; 
+        int[,] mapArray = new int[,]
             {
-                score = value;
-                OnScoreChangedE();
-            }
-        }
+                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1},
+                {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1},
+                {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1},
+                {1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1},
+                {1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1},
+                {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1},
+                {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1},
+                {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+            };
 
-        public void CreateKolobokRocket()
+        public void NewGame(int countTank, int countApple)
         {
-            int dir = kolobok.DirectionNow;
-            Point pos = kolobok.Position;
-            switch (dir)
-            {
-                case 3:
-                    {
-                        pos.Y += kolobok.Height;
-                        pos.X += kolobok.Width / 2;
-                        break;
-                    }
-                case 1:
-                    {
-                        pos.Y += kolobok.Height / 2;
-                        break;
-                    }
-                case 0:
-                    {
-                        pos.X += kolobok.Width;
-                        pos.Y += kolobok.Height / 2;
-                        break;
-                    }
-                case 2:
-                    {
-                        pos.X += kolobok.Width / 2;
-                        break;
-                    }
-                default:
-                    break;
-            }
-
-            rockets.Add(new Rocket(pos, dir));
-            OnRocketCreatedE();
-            SubscribeOnkolobokRocket();
-        }
-
-        public void CreateTankRocket(Tank tank)
-        {
-            int dir = tank.DirectionNow;
-            Point pos = tank.Position;
-            switch (dir)
-            {
-                case 3:
-                    {
-                        pos.Y += tank.Height;
-                        pos.X += tank.Width / 2;
-                        break;
-                    }
-                case 1:
-                    {
-                        pos.Y += tank.Height / 2;
-                        break;
-                    }
-                case 0:
-                    {
-                        pos.X += tank.Width;
-                        pos.Y += tank.Height / 2;
-                        break;
-                    }
-                case 2:
-                    {
-                        pos.X += tank.Width / 2;
-                        break;
-                    }
-                default:
-                    break;
-            }
-            rockets.Add(new Rocket(pos, dir));
-            OnRocketCreatedE();
-            SubscribeOnTankRocket();
-        }
-
-        private void SubscribeOnTankRocket()
-        {
-            rockets.Last().CheckPosition += new EventHandler(kolobok.OnCheckPosition);
-
-            for (int i = 0; i < walls.Count; i++)
-            {
-                rockets.Last().CheckPosition += new EventHandler(walls[i].OnCheckPosition);
-            }
-            rockets.Last().Died += new EventHandler(OnDied);
-        }
-
-        private void SubscribeOnkolobokRocket()
-        {
-            for (int i = 0; i < tanks.Count; i++)
-            {
-                rockets.Last().CheckPosition += new EventHandler(tanks[i].OnCheckPosition);
-            }
-
-            for (int i = 0; i < walls.Count; i++)
-            {
-                rockets.Last().CheckPosition += new EventHandler(walls[i].OnCheckPosition);
-            }
-
-            rockets.Last().Died += new EventHandler(OnDied);
-        }
-
-        private void OnDied(object sender, EventArgs e)
-        {
-            if (sender is Rocket)
-            {
-                rockets.Remove((Rocket)sender);
-            }
-
-            if (sender is Tank)
-            {
-                for (int i = 0; i < tanks.Count; i++)
-                {
-                    if (tanks[i] != (Tank)sender)
-                    {
-                        tanks[i].CheckPosition -= new EventHandler(((Tank)sender).OnCheckPosition);
-                    }
-                }
-
-                for (int i = 0; i < rockets.Count; i++)
-                {
-                    rockets[i].CheckPosition -= new EventHandler(((Tank)sender).OnCheckPosition);
-                }
-
-                kolobok.CheckPosition -= new EventHandler(((Tank)sender).OnCheckPosition);
-
-                tanks.Remove((Tank)sender);
-            }
-
-            if (sender is Wall)
-            {
-                for (int i = 0; i < tanks.Count; i++)
-                {
-                    tanks[i].CheckPosition -= new EventHandler(((Wall)sender).OnCheckPosition);
-                }
-
-                for (int i = 0; i < rockets.Count; i++)
-                {
-                    rockets[i].CheckPosition -= new EventHandler(((Wall)sender).OnCheckPosition);
-                }
-
-                kolobok.CheckPosition -= new EventHandler(((Wall)sender).OnCheckPosition);
-                walls.Remove((Wall)sender);
-            }
-
-        }
-
-        public void UnsubscribeKeyPress()
-        {
-            this.keyPress -= new KeyEventHandler(controller.OnKeyPress);
-        }
-
-        public Game(System.Windows.Forms.Timer timer, int speed, int tank, int apple)
-        {
-            countApple = apple;
-            countTank = tank;
-            MAXX = 500;
-            MAXY = 500;
-            this.timer = new System.Windows.Forms.Timer { Interval = 20 - speed };
-            this.timer.Tick += OnTick;
-
-            PlaceWalls();
-
-
+            score = 0;
+            rn = new Random();
+            int xKor = 50;
             for (int i = 0; i < countTank; i++)
             {
-                Rectangle rect = new Rectangle();
-                do
-                {
-                    rect = new Rectangle(rand.Next(0, MAXX), rand.Next(0, MAXY), (new Tank()).Width, (new Tank()).Height);
-                } while (Collides(rect));
-                System.Threading.Thread.Sleep(10);
-                tanks.Add(new Tank(rect.Location, i));
+                tanks.Add(new Tank(xKor, 50));
+                Objects.Add(tanks.Last<Tank>());
+                xKor += 100;
             }
-
-
             for (int i = 0; i < countApple; i++)
             {
-                Rectangle rect = new Rectangle();
-                do
+                apples.Add(new Apple());
+                Apple app = apples.Last();
+                app.X = rn.Next(1, 12) * 50;
+                app.Y = rn.Next(1, 12) * 50;
+                while (mapArray[app.Y/50, app.X/50] == 1)
                 {
-                    rect = new Rectangle(rand.Next(0, MAXX), rand.Next(0, MAXY), (new Apple()).Width, (new Apple()).Height);
-                } while (Collides(rect));
-
-                apples.Add(new Apple(rect.Location, i));
-            }
-            Rectangle rect2 = new Rectangle();
-            do
-            {
-                rect2 = new Rectangle(rand.Next(0, MAXX), rand.Next(0, MAXY), (new Kolobok()).Width, (new Kolobok()).Height);
-            } while (Collides(rect2));
-
-
-            kolobok = new Kolobok(rect2.Location);
-
-            SubscribePos();
-            kolobok.Died += new EventHandler(OnDied);
-        }
-
-        private void OnTick(object sender, EventArgs e)
-        {
-
-            if (!kolobok.Alive)
-            {
-                GameOver();
-            }
-            if (tanks.Count == 0 && kolobok.Alive)
-                GameEnd();
-            for (int i = 0; i < rockets.Count; i++)
-            {
-                rockets[i].Run();
-            }
-            kolobok.Run();
-            for (int i = 0; i < tanks.Count; i++)
-            {
-                tanks[i].Run();
-                if (rand.Next(0, 220) == 1)
-                {
-                    CreateTankRocket(tanks[i]);
+                    app.X = rn.Next(1, 12) * 50;
+                    app.Y = rn.Next(1, 12) * 50;
                 }
             }
-        }
-
-        private void GameEnd()
-        {
-            timer.Stop();
-            UnSubscribePos();
-            kolobok.Die();
-            int tempCount = tanks.Count;
-            for (int i = walls.Count - 1; i >= 0; i--)
+            kolobok = new Kolobok(50, 400);
+            Objects.Add(kolobok);
+            int nx = 0;
+            int ny = 0;
+            for(int i = 0; i < 12; i++)
             {
-                walls[i].Die();
-            }
-            for (int i = apples.Count - 1; i >= 0; i--)
-            {
-                apples[i].Die();
-            }
-            for (int i = rockets.Count - 1; i >= 0; i--)
-            {
-                rockets[i].Die();
-            }
-            OnGameEndE();
-        }
-
-        public Game()
-        {
-        }
-
-        public void GameOver()
-        {
-            timer.Stop();
-            UnSubscribePos();
-            kolobok.Die();
-            int tempCount = tanks.Count;
-            for (int i = tempCount - 1; i >= 0; i--)
-            {
-                tanks[i].Die();
-            }
-            for (int i = walls.Count - 1; i >= 0; i--)
-            {
-                walls[i].Die();
-            }
-            for (int i = 0; i < apples.Count; i++)
-            {
-                apples[i].Die();
-            }
-            for (int i = rockets.Count - 1; i >= 0; i--)
-            {
-                rockets[i].Die();
-            }
-            apples.Clear();
-            OnGameOverE();
-        }
-
-        public void Start()
-        {
-            timer.Start();
-        }
-
-        private void PlaceWalls()
-        {
-            for (int i = 0; i < MainGameForm.countWall; i++)
-            {
-                Rectangle rect = new Rectangle();
-                walls.Add(new Wall(rect.Location));
-            }
-
-            int cur = 0;
-            for (int i = 0; i < MainGameForm.map.Length; i++)
-            {
-                for (int j = 0; j < MainGameForm.map[0].Length; j++)
+                for (int j = 0; j < 12; j++)
                 {
-                    if (MainGameForm.map[i][j] == '*')
+                    if (mapArray[i, j] == 1)
                     {
-                        walls[cur].Position = new Point(i * walls[cur].Width, j * walls[cur].Height);
-                        cur++;
+                        monoliths.Add(new Monolith(nx, ny));
+                        Objects.Add(monoliths
+                            .Last<Monolith>());
+                    }
+                    nx += 50;
+                }
+                nx = 0;
+                ny += 50;
+            }
+        }
+
+        
+        public bool Collision(MovingObject obj)
+        {
+
+                foreach(var item in Objects)
+                {
+
+                if ((obj.X + 45 >= item.X) && (obj.X <= item.X + 45) && (obj.Y + 45 >= item.Y) && (obj.Y <= item.Y + 45) && (obj.X != item.X || obj.Y != item.Y))
+                {
+
+                    if (item is Kolobok && obj is Tank)
+                    {
+                        onOver();
+                    }
+                    return true;
+                }
+                }
+            
+            return false;
+        }
+        public bool Collis(Apple ap)
+        {
+            if ((kolobok.X + 45 >= ap.X) && (kolobok.X <= ap.X + 45) && (kolobok.Y + 45 >= ap.Y) && (kolobok.Y <= ap.Y + 45))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public bool CollisionBullet(MovingObject obj)
+        {
+
+            foreach (var item in Objects)
+            {
+
+                if ((obj.X + 45 >= item.X) && (obj.X <= item.X + 45) && (obj.Y + 45 >= item.Y) && (obj.Y <= item.Y + 45) && (obj.X != item.X || obj.Y != item.Y))
+                {
+                    
+                    if (item is Tank)
+                    {
+                        bullets.Remove((Bullet)obj);
+                        tanks.Remove((Tank)item);
+                       
+                        item.X = 500;
+                        item.Y = 500;
+                        while (Collision((MovingObject)item))
+                        {
+                            item.X -= 50;
+                        } 
+                        tanks.Add((Tank)item);
+                        tanks.Last().TravelDirection = rn.Next(1, 5);
+                        
+                        return true;
+                    }
+
+                    if (item is Monolith)
+                    {
+                        bullets.Remove((Bullet)obj);
+                        return true;
+                    }
+                    if (item is Kolobok)
+                    {
+                        GameOver();
+
+                        return true;
                     }
                 }
             }
-        }
-
-        private bool Collides(Rectangle rect)
-        {
-            if (rect.Left < 0 || rect.Right >= MAXX || rect.Top < 0 || rect.Bottom >= MAXY)
-                return true;
-            for (int i = 0; i < tanks.Count; i++)
-            {
-                if (tanks[i].CollidesWith(rect)) return true;
-            }
-            for (int i = 0; i < walls.Count; i++)
-            {
-                if (walls[i].CollidesWith(rect)) return true;
-            }
-            for (int i = 0; i < apples.Count; i++)
-            {
-                if (apples[i].CollidesWith(rect)) return true;
-            }
-            if (kolobok != null && kolobok.CollidesWith(rect)) return true;
 
             return false;
         }
 
-        public void SubscribePos()
+        private void GameOver()
         {
-            for (int i = 0; i < tanks.Count; i++)
+            tanks.Clear();
+            bullets.Clear();
+            monoliths.Clear();
+            apples.Clear();
+            onOver();
+        }
+
+        public bool CollisionApple(Apple obj)
+        {
+
+            foreach (var item in monoliths)
             {
-                for (int j = 0; j < tanks.Count; j++)
+
+                if ((obj.X + 45 >= item.X) && (obj.X <= item.X + 45) && (obj.Y + 45 >= item.Y) && (obj.Y <= item.Y + 45) && (obj.X != item.X || obj.Y != item.Y))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool Collides (int x, int y, int dx, int dy, int x2, int y2, int dx2, int dy2)
+        {
+            return !(dx <= x2 || x > dx2 || dy <= y2 || y > dy2);
+        }
+
+        public bool BoxCollides(int x, int y, int x2, int y2)
+        {
+            return Collides(x,y,x + 50,y+50, x2,y2,x2+50,y2+50);
+        }
+
+        public void Shot()
+        {
+            int xx = 0;
+            int yy = 0;
+            switch (TravelKolobok)
+            {
+                case 1:
+                    yy = kolobok.Y - 51;
+                    xx = kolobok.X;
+                    break;
+                case 2:
+                    yy = kolobok.Y + 51;
+                    xx = kolobok.X;
+                    break;
+                case 3:
+                    yy = kolobok.Y;
+                    xx = kolobok.X - 51;
+                    break;
+                case 4:
+                    yy = kolobok.Y;
+                    xx = kolobok.X + 51;
+                    break;
+            }
+            bullets.Add(new Bullet(xx, yy, TravelKolobok));
+        }
+
+        public void Shot(Tank tn)
+        {
+            int xx = 0;
+            int yy = 0;
+            switch (tn.TravelDirection)
+            {
+                case 1:
+                    yy = tn.Y - 51;
+                    xx = tn.X;
+                    break;
+                case 2:
+                    yy = tn.Y + 51;
+                    xx = tn.X;
+                    break;
+                case 3:
+                    yy = tn.Y;
+                    xx = tn.X - 51;
+                    break;
+                case 4:
+                    yy = tn.Y;
+                    xx = tn.X + 51;
+                    break;
+            }
+            bullets.Add(new Bullet(xx, yy, tn.TravelDirection));
+        }
+
+        public void Update()
+        {
+            
+            foreach (var item in tanks)
+            {
+                if ((item.Count + rn.Next(1, 200)) > 280)
                 {
-                    if (i != j)
+                    Shot(item);
+                    item.Count = 0;
+                }
+                item.Move();
+                if (Collision(item))
+                {
+                    item.Turn(rn.Next(1, 5));
+                    item.X = item.OldX;
+                    item.Y = item.OldY;
+                }
+            }
+            kolobok.Move();
+            
+            if (Collision(kolobok))
+            {
+                kolobok.X = kolobok.OldX;
+                kolobok.Y = kolobok.OldY;
+            }
+
+            foreach (var item in apples)
+            {
+                if (Collis(item))
+                {
+                    
+                    score++;
+                    onScore();
+                    item.X = rn.Next(1, 12) * 50;
+                    item.Y = rn.Next(1, 12) * 50;
+                    while (mapArray[item.Y / 50, item.X / 50] == 1)
                     {
-                        tanks[i].CheckPosition += new EventHandler(tanks[j].OnCheckPosition);
+                        item.X = rn.Next(1, 12) * 50;
+                        item.Y = rn.Next(1, 12) * 50;
                     }
                 }
-                tanks[i].Died += new EventHandler(OnDied);
-            }
-            for (int i = 0; i < tanks.Count; i++)
-            {
-                for (int j = 0; j < walls.Count; j++)
-                {
-                    tanks[i].CheckPosition += new EventHandler(walls[j].OnCheckPosition);
-                }
-            }
-            for (int j = 0; j < walls.Count; j++)
-            {
-                kolobok.CheckPosition += new EventHandler(walls[j].OnCheckPosition);
-                walls[j].Died += new EventHandler(OnDied);
-            }
-            for (int j = 0; j < tanks.Count; j++)
-            {
-                kolobok.CheckPosition += new EventHandler(tanks[j].OnCheckPosition);
-            }
-            for (int j = 0; j < tanks.Count; j++)
-            {
-                kolobok.CheckPosition += new EventHandler(tanks[j].OnCheckPosition);
-            }
-            for (int j = 0; j < apples.Count; j++)
-            {
-                kolobok.CheckPosition += new EventHandler(apples[j].OnCheckPosition);
             }
 
-            kolobok.ReplaceNeeded += new EventHandler(kolobok_ReplaceNeeded);
-            for (int j = 0; j < apples.Count; j++)
+            foreach (var item in bullets)
             {
-                apples[j].ReplaceNeeded += new EventHandler(apple_ReplaceNeeded); 
+                item.Move();
+                if (CollisionBullet(item)) break;
             }
 
         }
 
-        void apple_ReplaceNeeded(object sender, EventArgs e)
+        public List<Tank> Tanks 
         {
-            Rectangle rect2 = new Rectangle();
-            do
+            get 
             {
-                rect2 = new Rectangle(rand.Next(0, MAXX - (sender as MapObject).Width - 2), rand.Next(MAXY - (sender as MapObject).Height - 2), (new Apple()).Width, (new Apple()).Height);
-            } while (Collides(rect2));
+                return tanks;
+            }
 
-            (sender as Apple).Position = rect2.Location;
-            Score++;
         }
 
-        void kolobok_ReplaceNeeded(object sender, EventArgs e)
+        public List<Apple> Apples
         {
-            Rectangle rect2 = new Rectangle();
-            do
+            get
             {
-                rect2 = new Rectangle(rand.Next(0, MAXX - (sender as MapObject).Width - 2), rand.Next(MAXY - (sender as MapObject).Height - 2), (new Kolobok()).Width, (new Kolobok()).Height);
-            } while (Collides(rect2));
+                return apples;
+            }
 
-            kolobok.Position = rect2.Location;
         }
 
-        private void UnSubscribePos()
+        public List<Bullet> Bullets
         {
-            for (int i = 0; i < tanks.Count; i++)
+            get
             {
-                for (int j = 0; j < tanks.Count; j++)
-                {
-                    if (i != j)
-                    {
-                        tanks[i].CheckPosition -= new EventHandler(tanks[i].OnCheckPosition);
-                    }
-                }
+                return bullets;
             }
-            for (int i = 0; i < tanks.Count; i++)
+        }
+
+        public List<Monolith> Monoliths
+        {
+            get
             {
-                for (int j = 0; j < walls.Count; j++)
-                {
-                    tanks[i].CheckPosition -= new EventHandler(walls[j].OnCheckPosition);
-                }
-            }
-            for (int j = 0; j < walls.Count; j++)
-            {
-                kolobok.CheckPosition -= new EventHandler(walls[j].OnCheckPosition);
-            }
-            for (int j = 0; j < tanks.Count; j++)
-            {
-                kolobok.CheckPosition -= new EventHandler(tanks[j].OnCheckPosition);
-            }
-            for (int j = 0; j < apples.Count; j++)
-            {
-                kolobok.CheckPosition -= new EventHandler(apples[j].OnCheckPosition);
+                return monoliths;
             }
 
-            kolobok.ReplaceNeeded -= new EventHandler(kolobok_ReplaceNeeded);
-            for (int j = 0; j < apples.Count; j++)
+        }
+
+        public Kolobok Kolobok
+        {
+            get
             {
-                apples[j].ReplaceNeeded -= new EventHandler(apple_ReplaceNeeded);
+                return kolobok;
+            }
+        }
+
+        public int TravelKolobok
+        {
+            get
+            {
+                return kolobok.TravelDirection;
+            }
+
+            set
+            {
+                kolobok.TravelDirection = value;
+            }
+        }
+
+        public int Score
+        {
+            get
+            {
+                return score;
             }
         }
     }

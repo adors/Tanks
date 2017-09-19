@@ -1,28 +1,81 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Linq;
 using System.Text;
-using MVC;
-namespace Tanks
+using System.Threading.Tasks;
+using System.Drawing;
+
+namespace Model
 {
-    public class Tank : DynamicMapObject
+    public class Tank:MovingObject
     {
-        private int id;
-
-        public int ID
+        private int count = 0;
+        public Tank(int x, int y)
         {
-            get { return id; }
-            set { id = value; }
+            X = x;
+            Y = y;
+            OldX = x;
+            OldY = y;
+            TravelDirection = 2;
+            Speed = 1;
+        }
+        public void Move()
+        {
+            if (!Collision())
+            {
+                count++;
+                switch (TravelDirection)
+                {
+                    case 1:
+                        OldY = Y;
+                        OldX = X;
+                        Y -= Speed;
+                        break;
+                    case 2:
+                        OldX = X;
+                        OldY = Y;
+                        Y += Speed;
+                        break;
+                    case 3:
+                        OldX = X;
+                        OldY = Y;
+                        X -= Speed;
+                        break;
+                    case 4:
+                        OldX = X;
+                        OldY = Y;
+                        X += Speed;
+                        break;
+                }
+            }
         }
 
-        public Tank()
+        public override bool Collision()
         {
+            return false;
         }
 
-        public Tank(Point position, int id) : base(position)
+        public override void Update()
         {
-            this.id = id;
-            Life = 1;
+            throw new NotImplementedException();
+        }
+        public int Count
+        {
+            get
+            {
+                return count;
+            }
+
+            set
+            {
+                count = value;
+            }
+        }
+        public override string ToString()
+        {
+            return "Tank";
         }
     }
+
+
 }

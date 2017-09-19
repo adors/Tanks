@@ -1,49 +1,21 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
+using System.Linq;
 using System.Text;
-using Tanks.MVC;
+using System.Threading.Tasks;
 
-namespace Tanks
+namespace Model
 {
-    public class Apple : MapObject
+    public class Apple:StaticObject
     {
-        private int id;
-
-        public int ID
-        {
-            get { return id; }
-            set { id = value; }
-        }
-
-        public Apple(Point position, int id) : base(position)
-        {
-            this.id = id;
-        }
-
         public Apple()
         {
+            
         }
 
-        private void Replace()
+        public override string ToString()
         {
-            OnReplaceNeeded();
+            return "Apple";
         }
-
-        public override void OnCheckPosition(object sender, EventArgs e)
-        {
-            PositionChangedEventArgs positionArgs = e as PositionChangedEventArgs;
-            if (positionArgs == null)
-                return;
-            if (CollidesWith(positionArgs.NewRectangle))
-            {
-                if (sender is Kolobok)
-                {
-                    OnReplaceNeeded();
-                }
-            }
-        }
-
     }
 }
